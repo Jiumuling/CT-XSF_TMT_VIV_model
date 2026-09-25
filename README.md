@@ -43,6 +43,22 @@ See [docs/protected_code_notes.md](docs/protected_code_notes.md).
 
 ---
 
+## Documentation
+
+| Document | Language | Content |
+|---|---|---|
+| **[Usage guide](docs/usage_guide_en.md)** | English | download, first run, which files may be edited, all input groups, output selection, result files, template script, troubleshooting |
+| **[使用指南](docs/usage_guide_zh.md)** | 中文 | 下载、上手四行代码、可编辑文件、参数分组、输出选择、结果文件、常见问题、可直接复制的模板 |
+| [Parameter reference](docs/parameter_reference.md) | English | every parameter with its default value and meaning |
+| [Model overview](docs/model_overview.md) | English | governing equations, boundary treatment, time integration, result fields |
+| [Protected code notes](docs/protected_code_notes.md) | English | what is protected as P-code and the MATLAB release requirement |
+| [Reproducing the study figures](docs/reproduce_paper_figures.md) | English | case settings of each figure of the paper |
+
+**New here? Start with the [usage guide](docs/usage_guide_en.md)** (中文用户请读
+[使用指南](docs/usage_guide_zh.md)).
+
+---
+
 ## Requirements
 
 * **MATLAB R2023a or newer.**
