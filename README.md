@@ -1,101 +1,335 @@
-# XZT-XFS_TMT_VIV_model
-A MATLAB implementation of a 2-DOF mixed Timoshenko beam–wake oscillator solver for vortex-induced vibration analysis, including dynamic axial-tension feedback, semi-rigid boundary conditions, RK4/Newmark-β time integration, modal verification, and direct recovery of bending moment, shear force, and stress indicators.
-# XZT-XFS_TMT_VIV_model
+# CT-XSF_TMT_VIV_model
 
-A two-degree-of-freedom mixed Timoshenko beam–wake oscillator solver for vortex-induced vibration analysis of flexible cylindrical structures.
+A two-degree-of-freedom **mixed Timoshenko beam - wake oscillator** framework for
+vortex-induced vibration (VIV) of long flexible cylinders and risers, with
+direct recovery of bending moment, shear force and beam-based stress
+indicators.
 
-> **Code release status**  
-> This repository is currently prepared as a pre-release project page.  
-> The full simulation code, examples, and documentation will be formally open-sourced after the associated research paper is accepted or published.
+The model solves the in-line and cross-flow displacements **and** the sectional
+rotations as independent unknowns.  This makes it possible to recover
 
----
+```
+M = -EI * theta_z          bending moment
+Q = kGA * (u_z - theta)    shear force
+sigma_b = M_res * (D/2)/I  bending stress indicator
+tau_Q   = f * Q_res / A    shear stress indicator
+```
 
-## Overview
+directly from the mixed `[u, theta]` fields instead of reconstructing them from
+displacement derivatives only.  Supports, currents, dynamic axial tension and
+the wake oscillators are all described by user-editable parameters.
 
-This project provides a MATLAB-based reduced-order solver for the two-degree-of-freedom vortex-induced vibration (VIV) response of long flexible circular cylinders. The model combines a mixed Timoshenko beam formulation with acceleration-coupled wake oscillators, enabling simultaneous prediction of displacement response, dynamic axial-tension feedback, internal-force distribution, and boundary-sensitive hotspot behaviour.
-
-Unlike displacement-only beam formulations, the present model retains both transverse displacements and sectional rotations as independent unknowns. This allows bending moment, shear force, bending stress, and shear-stress indicators to be recovered directly from the solved structural fields rather than reconstructed only from displacement derivatives.
-
-The solver is designed for research on flexible risers, marine cables, slender cylindrical structures, and wake–structure interaction problems where displacement amplitude alone is insufficient and mechanically interpretable internal-force information is required.
-
----
-
-## Main Features
-
-- Two-degree-of-freedom in-line and cross-flow VIV simulation
-- Mixed Timoshenko beam formulation with independent displacement and rotation variables
-- Acceleration-coupled Van der Pol wake oscillators
-- Staggered RK4/Newmark-β time-integration framework
-- Dynamic axial-tension feedback based on geometric stretching
-- Direct recovery of bending moment, shear force, bending stress, and shear-stress indicators
-- Unified boundary treatment for pinned, clamped, free, guided, semi-rigid, and elastic supports
-- Ghost-point central-difference implementation for endpoint boundary conditions
-- Modal-analysis branch for dry or still-water natural-frequency verification
-- Time-domain response statistics, RMS envelopes, internal-force hotspots, and post-processing exports
-- Support for ultra-slender configurations and non-uniform incoming-flow profiles
+This repository is the code release accompanying the manuscript
+*"From displacement-based VIV prediction to internal-force assessment of
+ultra-slender risers: A two-degree-of-freedom mixed Timoshenko Wake-oscillator
+framework"* (Ocean Engineering).
 
 ---
 
-## Physical and Numerical Model
+## What is public and what is protected
 
-The structural subsystem is based on a mixed Timoshenko beam model. For each transverse direction, the structural equations are expressed in terms of displacement and sectional rotation. The internal force quantities are recovered as
+| Component | File(s) | Form |
+|---|---|---|
+| Parameter interface | `src/ctXsfDefaultParams.m` | **open source**, fully documented |
+| Selectable report / plotting layer | `src/ctXsfReport*.m`, `src/ctXsf*.m` | **open source**, editable |
+| Examples | `examples/*.m` | **open source**, runnable |
+| Core numerical solver (assembly, ghost-point boundaries, Newmark-beta / RK4 time integration, axial-tension feedback, internal-force and stress recovery) | `lib/*.p` | **protected MATLAB P-code** |
 
-- bending moment from the sectional rotation gradient,
-- shear force from the Timoshenko shear deformation,
-- resultant bending moment and resultant shear force from the in-line and cross-flow components.
-
-The wake subsystem is represented by modified Van der Pol-type wake oscillators. The in-line wake variable describes the fluctuating drag component, while the cross-flow wake variable describes the fluctuating lift component. The wake equations are coupled to the structural acceleration.
-
-The full time-domain solver uses a staggered explicit–implicit strategy:
-
-- the wake oscillators are advanced explicitly by the fourth-order Runge–Kutta method;
-- the structural subsystem is advanced implicitly by the average-acceleration Newmark-β method;
-- dynamic axial tension is updated within the time-marching process when axial-tension feedback is activated.
-
-When the hydrodynamic excitation is switched off, the wake subsystem is bypassed and the solver reduces to a structural modal-analysis or free-vibration verification framework.
+The core algorithms are distributed as MATLAB P-code (`.p`).  Users call them
+through the documented parameter interface, may set every physical,
+geometrical, flow, boundary and numerical input, and may choose which results
+are produced; the protected files contain the numerical implementation itself.
+See [docs/protected_code_notes.md](docs/protected_code_notes.md).
 
 ---
 
-## Boundary Conditions
+## Requirements
 
-The code supports a unified endpoint-boundary framework. The following support types are included:
+* **MATLAB R2023a or newer.**
+  P-code files are release-locked: files generated with R2023a run in R2023a and
+  in later releases, but not in earlier ones.
+* No toolbox is required for the solver.  The report layer uses base MATLAB
+  graphics and `writetable` (base MATLAB since R2013b).
 
-- `pinned_pinned`
-- `clamped_clamped`
-- `free_free`
-- `guided_guided`
-- `semi_rigid_both`
-- `elastic_both`
-- mixed boundary cases, such as clamped–free or clamped–pinned
-- manual boundary specification
+## Quick start
 
-Semi-rigid and elastic supports are represented through translational and rotational stiffness/damping parameters. This allows continuous transition between idealised pinned and clamped conditions and enables the effect of support stiffness on end-region bending and shear hotspots to be evaluated.
+```matlab
+ctXsfSetup;                              % add lib/, src/ and examples/ to the path
 
----
+params = ctXsfDefaultParams();           % documented default parameter set
+params.Nz_total = 401;                   % quick grid (paper case: 4001)
+params.T_total  = 10;                    % quick record (paper case: 300 s)
+params.nt       = ceil(params.T_total/params.dt);
 
-## Repository Status
+params.boundary_preset = 'semi_rigid_both';
+params.flow_profile    = 'linear_shear';
 
-This repository is currently under preparation.
+params.output.figures = {'displacement','internal_force','fatigue'};
 
-The full source code will be released after publication of the associated manuscript. The public release is expected to include:
+result = ctXsfSolveVIV(params);          % protected core solver
+ctXsfReport(result, params.output);      % public, selectable report
+```
 
-- MATLAB source code
-- example input files
-- benchmark case settings
-- plotting and post-processing scripts
-- documentation for key parameters
-- instructions for reproducing the main figures
-- license information
+`ctXsfSolveVIV` returns a `result` structure (displacement statistics,
+internal-force fields, stress indicators, dynamic axial-tension histories,
+space-time data and the hotspot table).  `ctXsfReport` turns that structure
+into figures and Excel/MAT exports, and can draw any subset of them.
 
-Until the formal release, this repository may contain only the README, release notes, and partial documentation.
+## Parameter groups
 
+All inputs live in the structure returned by `ctXsfDefaultParams` and are
+grouped as follows (see [docs/parameter_reference.md](docs/parameter_reference.md)
+for the complete field list).
 
+| Group | Meaning | Representative fields |
+|---|---|---|
+| **A** | Rod / beam parameters | `D`, `d`, `L`, `section_type`, `rhos`, `E`, `nu`, `kappa` |
+| **B** | Fluid parameters | `rho`, `rho_inner`, `eta`, `g` |
+| **C** | Flow velocity and flow-profile parameters | `flow_profile`, `U_top`, `beta`, `U_bottom`, `flow_profile_z/U`, `St` |
+| **D** | Boundary parameters | `boundary_preset`, `bcPreset.KthetaFactor`, `bcPreset.KuFactor`, `bc.left/right`, `boundary_*_in_time/modal` |
+| **E** | Hydrodynamic and wake-oscillator coefficients | `CL0`, `CD0`, `C_D`, `Ax`, `Ay`, `epsilon_x`, `epsilon_y` |
+| **F** | Static and dynamic axial tension | `N_top`, `use_variable_tension`, `lambda_DeltaN`, `include_submerged_weight` |
+| **G** | Numerical parameters | `Nz_total`, `T_total`, `dt`, `nt`, `betaN`, `gammaN`, `kmax_couple`, `rms_tail_fraction`, `TailTime` |
+| **H** | Output control | `output.out_dir`, `output.figure_dir`, `output.figures`, `output.save_fig`, `output.export`, `output.tau_shear_factor` |
+| **I** | Optional reference data | `dns.enable`, `dns.file`, `dns.cols`, `dns.z_mode` |
+| **J** | Modal analysis | `modal_n_modes`, `modal_environment`, `modal_recompute_weight` |
+| **K** | Fatigue post-processing | `fatigue.enable`, `fatigue.m_values`, `fatigue.n_phi`, `fatigue.regions_z_over_D_paper`, `fatigue.min_samples_per_period` |
+
+Two switches select the analysis:
+
+```matlab
+params.CL0 = 0;      % modal analysis of the mixed [u, theta] system
+params.CL0 = 0.3;    % time-domain two-degree-of-freedom VIV simulation
+```
+
+### Rod, fluid and flow examples
+
+```matlab
+% hollow flooded pipe
+params.section_type = 'hollow';
+params.D = 0.05;  params.d = 0.04;  params.rhos = 7850;  params.E = 2.1e11;
+params.rho = 1025;  params.rho_inner = 1025;
+
+% uniform current
+params.flow_profile = 'uniform';
+params.U_top = 1.0;
+
+% linear sheared current, top end fastest
+params.flow_profile = 'linear_shear';
+params.U_top = 0.5;  params.beta = 0.7;
+
+% measured / arbitrary profile (z = 0 at the top end)
+params.flow_profile   = 'custom';
+params.flow_profile_z = [0; 0.5*params.L; params.L];
+params.flow_profile_U = [1.20; 0.85; 0.45];
+
+% constant static tension instead of a weight-induced gradient
+params.include_submerged_weight = false;
+```
+
+### Boundary presets
+
+`pinned_pinned`, `clamped_clamped`, `free_free`, `guided_guided`,
+`semi_rigid_both`, `elastic_both`,
+`cantilever_left_clamped_right_free`, `left_pinned_right_free`,
+`left_clamped_right_pinned`, and `manual`.
+
+```matlab
+params.boundary_preset = 'semi_rigid_both';
+params.bcPreset.KthetaFactor = 90;   % end rotation stiffness = 90 * EI/L
+params.bcPreset.Ctheta       = 0;    % rotational damper
+params.boundary_stiffness_in_time = true;   % stiffness in the Newmark operator
+params.boundary_stiffness_in_modal = true;  % stiffness in the eigenvalue problem
+```
+
+## Numerical settings and post-processing window
+
+Mesh, time step, record length and the data window used for the statistics are
+all user-selectable:
+
+```matlab
+params.Nz_total = 4001;        % spanwise grid: dz/D = (L/D)/(Nz_total-1)
+params.dt       = 5e-4;        % time step (s)
+params.T_total  = 300;         % simulated record length (s)
+params.nt       = ceil(params.T_total/params.dt);   % time steps
+
+params.rms_tail_fraction  = 0.30;   % statistics: mean/RMS/STD from the last 30%
+params.tail_time_fraction = 0.30;   % retained space-time window: last 30%
+params.SaveStride         = 10;     % store every SaveStride-th step of that window
+```
+
+`params.tail_time_fraction = []` (default) keeps the explicit `params.TailTime`
+instead, i.e. the original behaviour `TailTime = min(10 s, 0.30 T_total)`.
+The solver prints the statistics window and the retained tail window at start-up,
+and automatically keeps `nt` consistent with `T_total/dt`.
+
+## Selecting the output
+
+`params.output.figures` (or the same field inside the options passed to
+`ctXsfReport`) selects what is produced:
+
+| Group | Content |
+|---|---|
+| `'displacement'` | displacement envelopes, RMS distributions, time history, trajectory, spectrum |
+| `'internal_force'` | bending-moment and shear-force statistics, envelopes, true vs displacement-based indicators |
+| `'fatigue'` | bending / shear stress envelopes and standard deviations, stress space-time maps, stress hotspot table, and the rainflow-based relative cyclic stress-demand screening |
+| `'time_space'` | displacement space-time maps |
+| `'wake'` | wake-oscillator RMS distributions |
+| `'tension'` | dynamic axial-tension histories and effective end tensions |
+| `'modal'` | natural frequencies (modal runs) |
+| `'all'` | every group |
+
+```matlab
+ctXsfReport(result, struct('figures', {{'fatigue'}}, 'export', true));
+```
+
+The solver itself also contains the complete paper figure set used during the
+study (`params.output.builtin_report = true`, `params.output.make_plots`), and
+writes Excel/MAT files into `params.output.out_dir` when
+`params.output.enable_export = true`.
+
+## Public API
+
+| Function | Purpose |
+|---|---|
+| `ctXsfSetup` | add `lib/`, `src/`, `examples/` to the MATLAB path |
+| `ctXsfDefaultParams` | documented default parameter structure |
+| `ctXsfSolveVIV` | protected core solver (modal or time-domain) returning `result` |
+| `ctXsfReport` | selectable figures, stress/force tables and MAT export |
+| `ctXsfStressHotspotTable` | regional bending / shear stress maxima |
+| `ctXsfFatigueRainflow` | rainflow-based relative cyclic stress-demand screening |
+| `ctXsfRainflowRanges` | rainflow cycle counting of a scalar time series |
+
+## Fatigue post-processing
+
+The fatigue module ranks the spanwise cyclic stress demand of the retained tail
+window using rainflow counting and a Palmgren-Miner summation,
+
+```text
+sigma_b(phi) = (D/2)/I * ( Mx cos(phi) + My sin(phi) )        critical fibre
+sigma_eq     = sqrt( sigma_b,res^2 + 3 tau_Q^2 )              equivalent stress
+D(m)         = sum over cycles of  count * range^m             demand index
+D_rel        = D(m) / max_z D(m)                               relative index
+```
+
+with the S-N slopes `params.fatigue.m_values` (default `[3 5]`) and a search
+over `params.fatigue.n_phi` circumferential angles.  The module also checks the
+sampling adequacy of the retained window (samples per shortest period) and
+reports the required `dt_save` when the record is too coarse.
+
+```matlab
+params.fatigue.enable    = true;
+params.fatigue.m_values  = [3 5];
+params.fatigue.n_phi     = 72;
+params.fatigue.regions_z_over_D_paper = [0 100; 100 1900; 1900 2000];
+
+result  = ctXsfSolveVIV(params);
+fatigue = ctXsfFatigueRainflow(result, params);   % standalone use
+ctXsfReport(result, struct('figures', {{'fatigue'}}));  % figures + tables
+```
+
+`D_rel` is a **relative** screening indicator for hotspot ranking; it is not an
+absolute fatigue life (no material S-N constant, mean-stress correction, thickness
+correction or long-term sea-state scatter is introduced).
+
+## Examples
+
+| Script | Description |
+|---|---|
+| `examples/example_01_modal_analysis.m` | natural frequencies for several supports, air / still water |
+| `examples/example_02_viv_shear_flow.m` | reference VIV case with a linear sheared current |
+| `examples/example_03_boundary_comparison.m` | pinned vs semi-rigid vs clamped supports |
+| `examples/example_04_dynamic_tension_sweep.m` | sweep of the axial-tension feedback coefficient |
+| `examples/example_05_custom_parameters.m` | user-defined pipe, fluid, current profile and support |
+| `examples/example_06_fatigue_rainflow.m` | selectable rainflow fatigue-demand screening and windows |
+
+Each example starts with `FAST_DEMO = true`, which uses a coarse grid and a
+short record.  Setting it to `false` reproduces the mesh and record length used
+for the paper cases, at a correspondingly longer runtime.
+
+## Repository layout
+
+```text
+CT-XSF_TMT_VIV_model/
+├── README.md
+├── LICENSE                     MIT
+├── CITATION.cff
+├── ctXsfSetup.m                path setup
+├── src/                        open-source interface + report layer
+│   ├── ctXsfDefaultParams.m
+│   ├── ctXsfReport.m
+│   ├── ctXsfReportDisplacement.m
+│   ├── ctXsfReportInternalForce.m
+│   ├── ctXsfReportFatigue.m
+│   ├── ctXsfReportTension.m
+│   ├── ctXsfReportWake.m
+│   ├── ctXsfReportTimeSpace.m
+│   ├── ctXsfReportModal.m
+│   ├── ctXsfReportExport.m
+│   └── ctXsfStressHotspotTable.m
+├── lib/                        protected core (MATLAB P-code)
+├── examples/                   runnable examples
+├── docs/                       model, parameter and code-protection notes
+└── data/                       optional reference-data placement
+```
+
+## Model summary
+
+For each transverse direction the mixed Timoshenko beam - wake oscillator
+system is
+
+```text
+m u_tt + C u_t - (N_eff u_z)_z - kGA u_zz + kGA theta_z = F
+J theta_tt - EI theta_zz - kGA u_z + kGA theta = 0
+```
+
+with the internal forces `M = -EI theta_z`, `Q = kGA (u_z - theta)` and
+`R = N_eff u_z + Q`.  End conditions are imposed through ghost points combined
+with central differences, which gives one uniform implementation of pinned,
+clamped, free, guided, semi-rigid and elastic supports.
+
+The wake subsystem consists of acceleration-coupled Van der Pol oscillators;
+the fluid forces follow the standard forced-oscillator projection
+`F_D = 0.5 rho D U^2 C_D + 0.25 rho D U^2 C_D0 p`,
+`F_L = 0.25 rho D U^2 C_L0 q`.  The additional axial tension caused by
+vibration-induced centreline stretching is
+
+```text
+DeltaN(t) = E*Ap/(2L) * integral_0^L ( X_z^2 + Y_z^2 ) dz
+N_eff(z,t) = N_static(z) + lambda_DeltaN * DeltaN(t)
+```
+
+The time integration is staggered: the wake oscillators are advanced by RK4
+and the structural subsystem by the average-acceleration Newmark-beta method,
+with strong coupling iterations inside every time step.  Full details are
+given in [docs/model_overview.md](docs/model_overview.md).
+
+## Citation
+
+If you use this code, please cite the associated paper and this repository; see
+[CITATION.cff](CITATION.cff).
+
+```bibtex
+@article{Feng2026CTXSF,
+  title   = {From displacement-based VIV prediction to internal-force assessment
+             of ultra-slender risers: A two-degree-of-freedom mixed Timoshenko
+             wake-oscillator framework},
+  author  = {Feng, Zexin and Zhang, Lin and Lv, Shuang and Nan, Yue and
+             Zhang, Zichun and Huo, Kebing and Guo, Xin and Jiang, Nan},
+  journal = {Ocean Engineering},
+  year    = {2026}
+}
+```
+
+## License
+
+Released under the MIT License; see [LICENSE](LICENSE).  The MIT terms apply to
+the open-source interface, examples and documentation distributed in this
+repository, and to the use of the protected P-code as a library.  The core
+numerical sources are not distributed; see
+[docs/protected_code_notes.md](docs/protected_code_notes.md).
 
 ## Contact
-
-This project is maintained by the authors of the associated manuscript.
-
-For questions regarding the model formulation, numerical implementation, reproducibility, or potential collaboration, please contact:
 
 | Name | Affiliation | Contact |
 |---|---|---|
@@ -103,42 +337,5 @@ For questions regarding the model formulation, numerical implementation, reprodu
 | Lin Zhang | College of Computer Science, Nankai University | `2120240759@mail.nankai.edu.cn` |
 | Shuang Lv | College of Computer Science, Inner Mongolia University | `13504537325@163.com` |
 
-The final contact information and citation details will be updated after publication of the associated paper.
-
----
-
-## Planned Code Structure
-
-The final open-source version is expected to follow a structure similar to:
-
-```text
-IMU-TJU_TMT_VIV_model/
-│
-├── README.md
-├── LICENSE
-├── main/
-│   └── main_Timo2DOF_VIV.m
-│
-├── src/
-│   ├── assembly/
-│   ├── boundary/
-│   ├── wake/
-│   ├── time_integration/
-│   ├── postprocessing/
-│   └── utilities/
-│
-├── examples/
-│   ├── modal_verification/
-│   ├── viv_uniform_flow/
-│   ├── viv_sheared_flow/
-│   └── semi_rigid_boundary/
-│
-├── data/
-│   └── reference_data/
-│
-└── docs/
-    └── parameter_description.md
-
-## Release Note
-
-This repository is currently prepared as a pre-release project page. The complete simulation code, example cases, benchmark settings, plotting scripts, and documentation will be formally open-sourced after the associated research paper is accepted or published.
+For questions about the model formulation, the parameter set, or collaboration,
+please open an issue or contact the authors.

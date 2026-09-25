@@ -1,0 +1,36 @@
+# MATLAB
+*.asv
+*.autosave
+*.m~
+slprj/
+codegen/
+*.mlappinstall
+*.mltbx
+
+# Simulation outputs produced by the model
+CTXSF_outputs_*/
+Timo2DOF_outputs_*/
+results/
+output/
+figures/
+*.mat
+*.fig
+
+# Excel outputs written by the report layer
+*_key_metrics.xlsx
+*_spanwise_profiles.xlsx
+*_fatigue_indicators.xlsx
+*_axial_tension_history.xlsx
+*_hotspots.xlsx
+*_summary.xlsx
+
+# Editors / OS
+.vs/
+.vscode/
+desktop.ini
+Thumbs.db
+~$*
+
+# Python helpers sometimes used for figure post-processing
+__pycache__/
+*.pyc

@@ -1,0 +1,79 @@
+cff-version: 1.2.0
+title: "CT-XSF_TMT_VIV_model: a two-degree-of-freedom mixed Timoshenko beam - wake oscillator framework for vortex-induced vibration and internal-force assessment"
+message: "If you use this code, please cite the associated paper and this repository."
+type: software
+authors:
+  - family-names: Feng
+    given-names: Zexin
+    affiliation: "School of Mechanical Engineering, Tianjin University, Tianjin 300072, China"
+    email: zexinfeng@tju.edu.cn
+  - family-names: Zhang
+    given-names: Lin
+    affiliation: "College of Computer Science, Nankai University, Tianjin 300350, China"
+  - family-names: Lv
+    given-names: Shuang
+    affiliation: "College of Computer Science, Inner Mongolia University, Hohhot 010070, China"
+  - family-names: Nan
+    given-names: Yue
+    affiliation: "Institute of Transportation, Inner Mongolia University, Hohhot 010070, China"
+  - family-names: Zhang
+    given-names: Zichun
+    affiliation: "School of Mechanical Engineering, Tianjin University, Tianjin 300072, China"
+  - family-names: Huo
+    given-names: Kebing
+    affiliation: "School of Mechanical Engineering, Tianjin University, Tianjin 300072, China"
+  - family-names: Guo
+    given-names: Xin
+    affiliation: "Institute of Transportation, Inner Mongolia University, Hohhot 010070, China"
+  - family-names: Jiang
+    given-names: Nan
+    affiliation: "School of Mechanical Engineering, Tianjin University, Tianjin 300072, China"
+    email: nanj@tju.edu.cn
+contact:
+  - family-names: Feng
+    given-names: Zexin
+    email: zexinfeng@tju.edu.cn
+repository-code: "https://github.com/Jiumuling/CT-XSF_TMT_VIV_model"
+url: "https://github.com/Jiumuling/CT-XSF_TMT_VIV_model"
+license: MIT
+keywords:
+  - vortex-induced vibration
+  - mixed Timoshenko beam
+  - wake oscillator model
+  - internal-force assessment
+  - ultra-slender riser
+  - semi-rigid boundary condition
+abstract: >-
+  A MATLAB framework for the two-degree-of-freedom vortex-induced vibration of
+  long flexible cylinders in non-uniform currents.  In-line and cross-flow
+  displacements and sectional rotations are solved as primary variables of a
+  mixed Timoshenko beam formulation, which allows bending moment, shear force
+  and beam-based stress indicators to be recovered directly from the
+  displacement-rotation fields.  Pinned, semi-rigid and clamped supports are
+  represented by an elastic-boundary formulation, and vibration-induced
+  axial-tension feedback is introduced through centreline stretching.  The
+  package contains an open parameter interface and a selectable
+  post-processing layer, with the core numerical algorithms distributed as
+  protected MATLAB P-code.
+preferred-citation:
+  type: article
+  title: "From displacement-based VIV prediction to internal-force assessment of ultra-slender risers: A two-degree-of-freedom mixed Timoshenko wake-oscillator framework"
+  journal: Ocean Engineering
+  year: 2026
+  authors:
+    - family-names: Feng
+      given-names: Zexin
+    - family-names: Zhang
+      given-names: Lin
+    - family-names: Lv
+      given-names: Shuang
+    - family-names: Nan
+      given-names: Yue
+    - family-names: Zhang
+      given-names: Zichun
+    - family-names: Huo
+      given-names: Kebing
+    - family-names: Guo
+      given-names: Xin
+    - family-names: Jiang
+      given-names: Nan
