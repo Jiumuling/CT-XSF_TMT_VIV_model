@@ -43,6 +43,7 @@ for k = 1:numel(lambdas)
         max(result.DeltaN), max(result.std_Mres), max(result.max_sigma_b)}; %#ok<AGROW>
 
     ctXsfReport(result, params.output);
+    close all;      % keep each case folder free of the previous case figures
 end
 
 T = cell2table(summary, 'VariableNames', ...

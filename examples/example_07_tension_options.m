@@ -35,7 +35,7 @@ cases = { ...
 
 zD = []; yRMS = []; mSTD = []; sSTD = [];
 summary = {};
-tension  = {};
+tension  = [];
 
 for k = 1:size(cases, 1)
 
@@ -75,6 +75,7 @@ for k = 1:size(cases, 1)
         max(result.DeltaN), mean(result.Ntop_eff_vector)}; %#ok<AGROW>
 
     ctXsfReport(result, params.output);
+    close all;      % keep each case folder free of the previous case figures
 end
 
 T = cell2table(summary, 'VariableNames', ...

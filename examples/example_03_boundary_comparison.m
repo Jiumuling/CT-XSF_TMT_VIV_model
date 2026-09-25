@@ -49,6 +49,7 @@ for k = 1:numel(cases)
         max(result.max_sigma_b), max(result.max_tau_Q)}; %#ok<AGROW>
 
     ctXsfReport(result, params.output);
+    close all;      % keep each case folder free of the previous case figures
 end
 
 names = {cases.name};
