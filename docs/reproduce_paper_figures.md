@@ -18,6 +18,8 @@ them.
 | Wake-oscillator intensity distribution | `Ax`, `Ay`, `epsilon_x`, `epsilon_y`, `CL0`, `CD0` | `wake` |
 | Semi-rigid versus pinned and clamped supports | `boundary_preset`, `bcPreset.KthetaFactor` | `displacement`, `internal_force` |
 | Sensitivity to the axial-tension feedback strength | `lambda_DeltaN` | `tension` |
+| Static-tension shape: weight-induced gradient versus constant tension | `include_submerged_weight`, `use_user_defined_w`, `w_user_defined` | `tension`, `displacement`, `internal_force` |
+| Dynamic-tension treatment (feedback / report-only / ignored) | `use_variable_tension`, `lambda_DeltaN` | `tension` |
 | Rainflow-based relative cyclic stress-demand profiles (bending, equivalent) | `rms_tail_fraction`, `tail_time_fraction`, `SaveStride`, `fatigue.m_values`, `fatigue.n_phi` | `fatigue` |
 | Displacement versus stress-indicator comparison and fatigue hotspot regions | `fatigue.regions_z_over_D_paper`, `fatigue.m_values` | `fatigue` |
 

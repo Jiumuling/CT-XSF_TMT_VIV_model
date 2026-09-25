@@ -88,7 +88,7 @@ for the complete field list).
 | **C** | Flow velocity and flow-profile parameters | `flow_profile`, `U_top`, `beta`, `U_bottom`, `flow_profile_z/U`, `St` |
 | **D** | Boundary parameters | `boundary_preset`, `bcPreset.KthetaFactor`, `bcPreset.KuFactor`, `bc.left/right`, `boundary_*_in_time/modal` |
 | **E** | Hydrodynamic and wake-oscillator coefficients | `CL0`, `CD0`, `C_D`, `Ax`, `Ay`, `epsilon_x`, `epsilon_y` |
-| **F** | Static and dynamic axial tension | `N_top`, `use_variable_tension`, `lambda_DeltaN`, `include_submerged_weight` |
+| **F** | Static and dynamic axial tension | `N_top`, `include_submerged_weight`, `use_user_defined_w`, `w_user_defined`, `use_variable_tension`, `lambda_DeltaN` |
 | **G** | Numerical parameters | `Nz_total`, `T_total`, `dt`, `nt`, `betaN`, `gammaN`, `kmax_couple`, `rms_tail_fraction`, `TailTime` |
 | **H** | Output control | `output.out_dir`, `output.figure_dir`, `output.figures`, `output.save_fig`, `output.export`, `output.tau_shear_factor` |
 | **I** | Optional reference data | `dns.enable`, `dns.file`, `dns.cols`, `dns.z_mode` |
@@ -164,6 +164,31 @@ The solver prints the statistics window and the retained tail window at start-up
 and automatically keeps `nt` consistent with `T_total/dt`.
 
 ## Selecting the output
+
+### Axial-tension options
+
+The axial tension has two independent, user-selectable parts:
+
+```text
+N_eff(z,t)  = N_static(z) + lambda_DeltaN * DeltaN(t)
+N_static(z) = N_top - w*z
+DeltaN(t)   = E*Ap/(2L) * integral_0^L ( X_z^2 + Y_z^2 ) dz
+```
+
+| Choice | How to select it |
+|---|---|
+| Linear static tension from submerged weight: `N_top - w*z` | `params.include_submerged_weight = true` (default) |
+| Constant static tension `N_top` along the span | `params.include_submerged_weight = false` |
+| User-defined gradient `w` | `params.use_user_defined_w = true; params.w_user_defined = ...` |
+| Dynamic tension fed back into the stiffness | `params.use_variable_tension = true; params.lambda_DeltaN = 1` |
+| Dynamic tension computed and reported, but not fed back | `params.use_variable_tension = true; params.lambda_DeltaN = 0` |
+| Dynamic tension ignored completely (fastest, matrix factorised once) | `params.use_variable_tension = false` |
+
+`params.use_variable_tension = false` does not compute `DeltaN(t)`, so its
+history is zero; keep the switch on with `lambda_DeltaN = 0` when the additional
+tension should still be reported.  The solver prints the active tension
+configuration and the static tension range at start-up, and
+`examples/example_07_tension_options.m` compares the four combinations.
 
 `params.output.figures` (or the same field inside the options passed to
 `ctXsfReport`) selects what is produced:
@@ -242,6 +267,7 @@ correction or long-term sea-state scatter is introduced).
 | `examples/example_04_dynamic_tension_sweep.m` | sweep of the axial-tension feedback coefficient |
 | `examples/example_05_custom_parameters.m` | user-defined pipe, fluid, current profile and support |
 | `examples/example_06_fatigue_rainflow.m` | selectable rainflow fatigue-demand screening and windows |
+| `examples/example_07_tension_options.m` | static-tension shape and dynamic-tension feedback options |
 
 Each example starts with `FAST_DEMO = true`, which uses a coarse grid and a
 short record.  Setting it to `false` reproduces the mesh and record length used

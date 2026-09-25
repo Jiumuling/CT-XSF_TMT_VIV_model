@@ -177,21 +177,59 @@ params.epsilon_x = 0.3;
 params.epsilon_y = 0.3;
 
 %% ===================== [F] 静轴力与动态轴力 feedback =====================
-params.N_top = 2.45e2;             % 顶端静张力 N
+% 轴力由两部分组成，二者都可由用户独立选择：
+%   静力部分  N_static(z) = N_top - w*z            （w 由 include_submerged_weight 决定）
+%   动力部分  N_eff(z,t)  = N_static(z) + lambda_DeltaN * DeltaN(t)
+%   附加轴力  DeltaN(t)   = E*Ap/(2L) * int_0^L ( X_z^2 + Y_z^2 ) dz
+%
+% ---------------------------------------------------------------------
+% 开关 1：静张力是否包含自重/浮重引起的线性变化
+% ---------------------------------------------------------------------
+%   true （默认）：w = g*(m_s + m_w - m_f)，静张力沿跨长线性变化，
+%                  顶端 N_top 最大，底端 N_top - w*L 最小。
+%   false        ：w = 0，沿跨长恒定静张力 N_static(z) = N_top。
+% 若只想改变 w 的大小（例如预留浮力、含内流体的管），可直接修改 params.g，
+% 或修改下面的 params.w 覆盖值（见 params.use_user_defined_w）。
+params.include_submerged_weight = true;
 
-% 动态附加轴力开关。true 表示由横向振动几何伸长引起 DeltaN(t)：
-%   DeltaN(t) = E*Ap/(2L) * int_0^L [X_z^2 + Y_z^2] dz
+% 可选：直接指定单位长度浮重 w（N/m），用于覆盖上面的自动计算。
+%   params.use_user_defined_w = true 时生效。
+params.use_user_defined_w = false;
+params.w_user_defined     = 0.0;     % 例如 0 表示恒张力，4.0 表示自重引起的线性轴力
+
+% ---------------------------------------------------------------------
+% 开关 2：是否计入振动引起的动态附加轴力 DeltaN(t)
+% ---------------------------------------------------------------------
+%   true （默认）：每个时间步根据几何伸长计算 DeltaN(t)，并按 lambda_DeltaN
+%                  反馈进结构刚度矩阵（矩阵随之重新组装）。
+%   false        ：完全不计动态轴力，DeltaN 不计算、输出为 0；
+%                  结构矩阵固定，可预先 LU 分解，计算最快。
+% 注意：若想“计算并输出 DeltaN，但不反馈到结构”，请保持
+%   use_variable_tension = true 且 lambda_DeltaN = 0，
+%   这时仍然给出 DeltaN(t) 时间历程，只是不改变结构刚度。
 params.use_variable_tension = true;
 
 % 动态附加轴力反馈强度系数：
-%   lambda_DeltaN = 0 -> 只计算/输出 DeltaN，但不反馈到结构矩阵；
-%   lambda_DeltaN = 1 -> 完整反馈，即 N_eff = N_static + DeltaNxy(t)；
-%   0~1              -> 连续敏感性分析用。
+%   1   -> 完整反馈，N_eff = N_static + DeltaN(t)
+%   0   -> 只计算/输出 DeltaN，不反馈（见上面的说明）
+%   0~1 -> 连续敏感性分析用
 params.lambda_DeltaN = 1.0;
 
-% true ：静张力沿跨长按浮重线性变化 N_static(z) = N_top - w*z；
-% false：w = 0，即沿跨长恒定静张力。
-params.include_submerged_weight = true;
+% 顶端静张力（N）。无论上面如何选择，静张力都以此为顶端基准值。
+params.N_top = 2.45e2;
+
+% ---------------------------------------------------------------------
+% 四种典型组合（均受支持，可按需选择）
+%   1) 自重线性轴力 + 变轴力反馈：
+%        include_submerged_weight = true , use_variable_tension = true , lambda_DeltaN = 1
+%   2) 自重线性轴力 + 不含变轴力：
+%        include_submerged_weight = true , use_variable_tension = false
+%   3) 恒定静张力 + 变轴力反馈：
+%        include_submerged_weight = false, use_variable_tension = true , lambda_DeltaN = 1
+%   4) 恒定静张力 + 只输出 DeltaN 不反馈：
+%        include_submerged_weight = false, use_variable_tension = true , lambda_DeltaN = 0
+% 例：examples/example_07_tension_options.m 会直接对比这四种组合。
+% ---------------------------------------------------------------------
 
 %% ===================== [G] 数值参数 Numerical parameters =====================
 % 空间网格与时间步。精细网格/长时间对论文算例更准确，但耗时成比例增加。

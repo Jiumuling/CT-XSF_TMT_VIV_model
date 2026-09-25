@@ -73,13 +73,25 @@ Values listed below are the defaults.  Groups follow the headings used in
 | Field | Default | Meaning |
 |---|---|---|
 | `N_top` | `245` | static tension at the top end (N) |
-| `use_variable_tension` | `true` | include the vibration-induced `DeltaN(t)` |
-| `lambda_DeltaN` | `1.0` | feedback strength: `N_eff = N_static + lambda_DeltaN * DeltaN(t)` |
-| `include_submerged_weight` | `true` | `false` gives a constant static tension (`w = 0`) |
+| `include_submerged_weight` | `true` | `true`: linear static tension `N_top - w*z` with `w = g (m_s + m_w - m_f)`; `false`: constant `N_top` |
+| `use_user_defined_w` | `false` | take `w` from `w_user_defined` instead of the automatic value |
+| `w_user_defined` | `0.0` | user-defined static-tension gradient (N/m); `0` gives a constant static tension |
+| `use_variable_tension` | `true` | `true`: compute the vibration-induced `DeltaN(t)`; `false`: ignore it entirely (fastest run, `DeltaN` output is zero) |
+| `lambda_DeltaN` | `1.0` | feedback strength: `N_eff = N_static + lambda_DeltaN * DeltaN(t)`; `0` reports `DeltaN` without feeding it back |
 
-The static profile is `N_static(z) = N_top - w z` with
-`w = g (m_s + m_w - m_f)`; an error is raised if the tension becomes
-non-positive somewhere along the span.
+The static profile is `N_static(z) = N_top - w z`; an error is raised if the
+tension becomes non-positive somewhere along the span, and the solver prints the
+active tension configuration (static shape, `w`, static range and `DeltaN`
+treatment) at start-up.
+
+The two switches are independent, which gives four typical combinations:
+
+| Static part | Dynamic part | Settings |
+|---|---|---|
+| `N_top - w*z` | full feedback | `include_submerged_weight = true`, `use_variable_tension = true`, `lambda_DeltaN = 1` |
+| `N_top - w*z` | no dynamic tension | `include_submerged_weight = true`, `use_variable_tension = false` |
+| `N_top` | full feedback | `include_submerged_weight = false`, `use_variable_tension = true`, `lambda_DeltaN = 1` |
+| `N_top` | `DeltaN` reported only | `include_submerged_weight = false`, `use_variable_tension = true`, `lambda_DeltaN = 0` |
 
 ## G. Numerical parameters
 
