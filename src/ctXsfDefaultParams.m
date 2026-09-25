@@ -289,6 +289,18 @@ params.output.make_plots = true;
 params.output.tau_shear_factor = 4/3;
 
 % ---------------------------------------------------------------------
+% 端部热点分区（内力真值/位移假设对比表、疲劳分区表共用，用户可选）
+%   两端各取跨长的 hotspot_region_fraction 作为端部区，中间为剩余区段：
+%     bottom: 0 -- edge,  middle: edge -- L/D-edge,  top: L/D-edge -- L/D
+%       edge = hotspot_region_fraction * L/D
+%   默认 0.025，即两端各 2.5% 跨长。
+%   也可用 hotspot_region_edge_zD 直接给定边界（单位 z/D，论文坐标，底端 0）。
+%   注：论文中 L/D = 2000 的表格采用 0--100 / 100--1900 / 1900--2000，
+%   相当于端部比例 5%；若要完全复现已发表表格，把下面改成 0.05 即可。
+params.hotspot_region_fraction = 0.025;
+params.hotspot_region_edge_zD  = [];      % 非空时优先于上面的比例
+
+% ---------------------------------------------------------------------
 % 可选输出的选择开关（由公开的 CTXSFREPORT 使用，也可自行读取该字段）：
 %   'displacement'   位移关键信息：包络、RMS、时空图、轨迹、频谱
 %   'internal_force' 内力：弯矩/剪力沿程统计、真值与位移假设对比

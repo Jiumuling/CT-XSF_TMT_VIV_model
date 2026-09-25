@@ -135,10 +135,19 @@ and keeps `nt` consistent with `T_total/dt`.
 | `output.make_plots` | `true` | `false` keeps the figures off-screen (batch / cluster) |
 | `output.tau_shear_factor` | `4/3` | `tau_max ~ factor * Q_res / A` |
 | `output.figures` | `{'all'}` | figure groups drawn by `CTXSFREPORT` |
+| `hotspot_region_fraction` | `0.025` | end-region width as a fraction of the span, applied at both ends |
+| `hotspot_region_edge_zD` | `[]` | explicit end-region boundary in z/D (paper coordinates); overrides the fraction |
 
 `output.figures` accepts any subset of
 `'displacement'`, `'time_space'`, `'internal_force'`, `'fatigue'`, `'wake'`,
 `'tension'`, `'modal'` and `'all'`.
+
+The regional hotspot tables use `edge = hotspot_region_fraction * L/D` (0.025 by
+default, i.e. 2.5 % of the span at each end) and report the bottom `0--edge`,
+middle `edge--L/D-edge` and top `L/D-edge--L/D` regions, with the region names
+generated from the actual boundaries.  The published paper tables used a 5 % end
+window at `L/D = 2000` (`0--100 / 100--1900 / 1900--2000`); set
+`hotspot_region_fraction = 0.05` to reproduce them exactly.
 
 ## I. Optional reference-data comparison
 
@@ -176,7 +185,7 @@ Used by the `'fatigue'` figure group of `ctXsfReport` and by the standalone
 | `fatigue.make_figures` | `true` | draw the fatigue figures |
 | `fatigue.m_values` | `[3 5]` | S-N slopes of the relative demand index (several allowed) |
 | `fatigue.n_phi` | `36` | circumferential angles searched per section (accuracy vs runtime) |
-| `fatigue.regions_z_over_D_paper` | `[]` | spanwise regions in paper coordinates (bottom = 0); empty = `[0 100; 100 L/D-100; L/D-100 L/D]` |
+| `fatigue.regions_z_over_D_paper` | `[]` | spanwise regions in paper coordinates (bottom = 0, top = L/D); empty = automatic, following `hotspot_region_fraction` / `hotspot_region_edge_zD` (2.5 % ends by default) |
 | `fatigue.region_names` | `{}` | names of those regions; empty = automatic names |
 | `fatigue.min_samples_per_period` | `20` | samples per shortest period required for adequate rainflow counting |
 | `fatigue.warning_samples_per_period` | `10` | warning threshold below `min_samples_per_period` |

@@ -190,6 +190,25 @@ tension should still be reported.  The solver prints the active tension
 configuration and the static tension range at start-up, and
 `examples/example_07_tension_options.m` compares the four combinations.
 
+### End-region hotspot windows
+
+The regional hotspot tables (true-vs-displacement-based internal forces and the
+fatigue regions) split the span into bottom / middle / top with a
+user-selectable end window:
+
+```matlab
+params.hotspot_region_fraction = 0.025;  % end window = 2.5% of the span (default)
+params.hotspot_region_edge_zD  = [];     % or set the boundary explicitly in z/D
+```
+
+The rule is `edge = hotspot_region_fraction * L/D`, giving the regions
+`0--edge`, `edge--L/D-edge` and `L/D-edge--L/D`, with names generated from the
+actual boundaries.  The published tables of the paper used
+`0--100 / 100--1900 / 1900--2000` at `L/D = 2000`, i.e. a 5 % end window; set
+`params.hotspot_region_fraction = 0.05` to reproduce them exactly.
+`params.fatigue.regions_z_over_D_paper` can still be given explicitly and takes
+precedence inside the fatigue module.
+
 `params.output.figures` (or the same field inside the options passed to
 `ctXsfReport`) selects what is produced:
 
@@ -247,6 +266,8 @@ params.fatigue.enable    = true;
 params.fatigue.m_values  = [3 5];
 params.fatigue.n_phi     = 72;
 params.fatigue.regions_z_over_D_paper = [0 100; 100 1900; 1900 2000];
+% leave regions_z_over_D_paper = [] for automatic regions:
+%   edge = min(100, L/D/3)  ->  [0 edge; edge L/D-edge; L/D-edge L/D]
 
 result  = ctXsfSolveVIV(params);
 fatigue = ctXsfFatigueRainflow(result, params);   % standalone use

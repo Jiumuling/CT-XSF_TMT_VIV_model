@@ -14,7 +14,7 @@ them.
 | Bending-moment and shear-force statistics along the span | `boundary_preset`, `bcPreset.*` | `internal_force` |
 | True (mixed Timoshenko) versus displacement-based internal forces | any VIV case | `internal_force` |
 | Internal-force and stress space-time maps | `TailTime`, `SaveStride` | `time_space`, `fatigue` |
-| Bending / shear stress demand and end-region hotspots | `boundary_preset`, `bcPreset.KthetaFactor`, `tau_shear_factor` | `fatigue` |
+| Bending / shear stress demand and end-region hotspots | `boundary_preset`, `bcPreset.KthetaFactor`, `tau_shear_factor`, `hotspot_region_fraction` | `fatigue` |
 | Wake-oscillator intensity distribution | `Ax`, `Ay`, `epsilon_x`, `epsilon_y`, `CL0`, `CD0` | `wake` |
 | Semi-rigid versus pinned and clamped supports | `boundary_preset`, `bcPreset.KthetaFactor` | `displacement`, `internal_force` |
 | Sensitivity to the axial-tension feedback strength | `lambda_DeltaN` | `tension` |
