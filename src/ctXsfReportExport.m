@@ -11,6 +11,7 @@ function files = ctXsfReportExport(result, o)
 
 files = {};
 D     = result.params.D;
+isModal = strcmpi(ctXsfGetField(result, 'mode', 'viv'), 'modal');
 
 %% ---- key metrics -----------------------------------------------------
 metrics = {};
@@ -49,6 +50,9 @@ T = cell2table(metrics, 'VariableNames', {'Metric', 'Value'});
 xls = fullfile(o.out_dir, sprintf('%s_key_metrics.xlsx', o.prefix));
 writetable(T, xls);
 files{end+1} = xls;
+
+%% ---- time-domain results only ----------------------------------------
+if ~isModal && isfield(result, 'z_paper')
 
 %% ---- spanwise profiles ----------------------------------------------
 T = table(result.z_paper, ...
@@ -98,6 +102,8 @@ if isfield(result, 'trueAssumedHotspotTable') && ~isempty(result.trueAssumedHots
     writetable(result.trueAssumedHotspotTable, xls);
     files{end+1} = xls;
 end
+
+end   % ~isModal
 
 %% ---- complete result -------------------------------------------------
 matf = fullfile(o.out_dir, sprintf('%s_summary.mat', o.prefix));
